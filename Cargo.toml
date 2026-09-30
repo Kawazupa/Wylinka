@@ -1,0 +1,20 @@
+[package]
+name = "wylinka"
+version = "0.1.0"
+edition = "2024"
+
+[profile.dev]
+opt-level = 1
+
+[dependencies]
+base64 = "0.22.1"
+clap = { version = "4", features = ["derive"] }
+oxc_allocator = "0.134.0"
+oxc_ast = "0.134.0"
+oxc_ast_visit = "0.134.0"
+oxc_codegen = "0.134.0"
+oxc_parser = "0.134.0"
+oxc_semantic = "0.134.0"
+oxc_span = "0.134.0"
+oxc_str = "0.134.0"
+oxc_syntax = "0.134.0"
