@@ -3,7 +3,6 @@ pub mod opcodes;
 pub mod transformers;
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{BindingPattern, Expression, Statement};
 use oxc_codegen::Codegen;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
@@ -42,33 +41,7 @@ pub fn run<'a>(allocator: &'a Allocator, source: &'a str) -> Result<AnalysisResu
     }
 
     let original_state_var: &'a str = {
-        let mut name: Option<&str> = None;
-        if let Some((s, _)) = extractors::extract_opcode_array(&program) {
-            name = Some(s);
-        } else if let Some(Statement::ExpressionStatement(stmt)) = program.body.first() {
-            if let Expression::CallExpression(call) = &stmt.expression {
-                if let Expression::FunctionExpression(func) = call.callee.get_inner_expression() {
-                    if let Some(body) = func.body.as_ref() {
-                        for s in body.statements.iter() {
-                            if let Statement::VariableDeclaration(decl) = s {
-                                for d in decl.declarations.iter() {
-                                    if let Some(Expression::ArrayExpression(_)) = &d.init {
-                                        if let BindingPattern::BindingIdentifier(id) = &d.id {
-                                            name = Some(id.name.as_str());
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            if name.is_some() {
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        let chosen = name.unwrap_or("v3");
+        let chosen = extractors::extract_opcode_array(&program).map_or("v3", |(s, _)| s);
         allocator.alloc_str(chosen)
     };
 
@@ -100,8 +73,7 @@ pub fn run<'a>(allocator: &'a Allocator, source: &'a str) -> Result<AnalysisResu
         code = next;
     }
 
-    let bytecode = extractors::extract_bytecode(&program)
-        .ok_or_else(|| "bytecode extraction failed".to_string())?;
+    let bytecode = extractors::extract_bytecode(&program)?;
     let mut opcode_map = opcodes::extract(&program, source, allocator)
         .ok_or_else(|| "opcode extraction failed".to_string())?;
     opcode_map.state_var = original_state_var;

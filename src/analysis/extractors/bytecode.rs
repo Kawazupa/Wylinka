@@ -1,18 +1,22 @@
 use base64::prelude::{BASE64_STANDARD, Engine};
 use oxc_ast::ast::{Expression, Program, Statement};
 
-pub fn extract_bytecode(program: &Program<'_>) -> Option<Vec<u16>> {
-    let b64 = find_atob_string(program)?;
-    let bytes = BASE64_STANDARD.decode(b64).ok()?;
+pub fn extract_bytecode(program: &Program<'_>) -> Result<Vec<u16>, String> {
+    let b64 = find_atob_string(program)
+        .ok_or("bytecode extraction failed: no window.atob(\"...\") string found in the main IIFE")?;
+    let bytes = BASE64_STANDARD
+        .decode(b64)
+        .map_err(|e| format!("bytecode extraction failed: invalid base64: {e}"))?;
     if bytes.len() % 2 != 0 {
-        return None;
+        return Err(format!(
+            "bytecode extraction failed: decoded length {} is odd, expected whole u16 words",
+            bytes.len()
+        ));
     }
-    Some(
-        bytes
-            .chunks_exact(2)
-            .map(|c| u16::from_le_bytes([c[0], c[1]]))
-            .collect(),
-    )
+    Ok(bytes
+        .chunks_exact(2)
+        .map(|c| u16::from_le_bytes([c[0], c[1]]))
+        .collect())
 }
 
 fn find_atob_string<'a>(program: &'a Program<'_>) -> Option<&'a str> {
