@@ -15,7 +15,7 @@ triplets (88k)
 flat stmts (11k)
    │  fold       collapse the pure coercion games to constants
    ▼
-output/*.flat.js   (lossy — enough to read, analyze, and solve against)
+output/*.clean.flat.js   (lossy — enough to read, analyze, and solve against)
 ```
 
 ```
