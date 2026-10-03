@@ -923,6 +923,9 @@ fn fmt_value(v: &Value, out: &mut String) {
         Value::Undefined => out.push_str("undefined"),
         Value::Null => out.push_str("null"),
         Value::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
+        Value::Number(n) if n.is_infinite() => {
+            out.push_str(if *n > 0.0 { "Infinity" } else { "-Infinity" })
+        }
         Value::Number(n) => out.push_str(&format!("{n}")),
         Value::String(s) => out.push_str(&format!("{s:?}")),
         Value::Window => out.push_str("window"),

@@ -41,7 +41,8 @@ pub fn run<'a>(allocator: &'a Allocator, source: &'a str) -> Result<AnalysisResu
     }
 
     let original_state_var: &'a str = {
-        let chosen = extractors::extract_opcode_array(&program).map_or("v3", |(s, _)| s);
+        let (chosen, _) = extractors::extract_opcode_array(&program)
+            .ok_or("state var extraction failed: no array literal found in the main IIFE")?;
         allocator.alloc_str(chosen)
     };
 

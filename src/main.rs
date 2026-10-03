@@ -61,6 +61,13 @@ fn analyze(src: &Path, output: &Path) -> Result<(), String> {
     fs::write(output, &result.code).map_err(|e| format!("write {}: {e}", output.display()))?;
 
     let triplets = ingest::parse(&result.bytecode);
+    let dropped = result.bytecode.len() % 3;
+    if dropped != 0 {
+        eprintln!(
+            "{}: warning: {dropped} trailing bytecode word(s) do not form a full triplet and were dropped",
+            src.display()
+        );
+    }
     println!("{} -> {} ({}b)", src.display(), output.display(), result.code.len());
     println!("{} instrs, {} triplets", result.bytecode.len(), triplets.len());
 
