@@ -522,3 +522,51 @@ fn b64_decode(input: &str) -> Option<Vec<u8>> {
     }
     Some(out)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const RFC4648: &[(&str, &str)] = &[
+        ("", ""),
+        ("f", "Zg=="),
+        ("fo", "Zm8="),
+        ("foo", "Zm9v"),
+        ("foob", "Zm9vYg=="),
+        ("fooba", "Zm9vYmE="),
+        ("foobar", "Zm9vYmFy"),
+    ];
+
+    #[test]
+    fn b64_encode_matches_rfc4648_vectors() {
+        for (plain, encoded) in RFC4648 {
+            assert_eq!(b64_encode(plain.as_bytes()), *encoded, "encode {plain:?}");
+        }
+    }
+
+    #[test]
+    fn b64_decode_matches_rfc4648_vectors() {
+        for (plain, encoded) in RFC4648 {
+            assert_eq!(b64_decode(encoded).as_deref(), Some(plain.as_bytes()), "decode {encoded:?}");
+        }
+    }
+
+    #[test]
+    fn b64_round_trips_every_byte_value() {
+        let all: Vec<u8> = (0..=255).collect();
+        for len in 0..=all.len() {
+            let slice = &all[..len];
+            assert_eq!(b64_decode(&b64_encode(slice)).as_deref(), Some(slice), "len {len}");
+        }
+    }
+
+    #[test]
+    fn b64_decode_ignores_whitespace() {
+        assert_eq!(b64_decode("Zm9v\nYmFy").as_deref(), Some(&b"foobar"[..]));
+    }
+
+    #[test]
+    fn b64_decode_rejects_invalid_characters() {
+        assert_eq!(b64_decode("Zm9v!"), None);
+    }
+}
